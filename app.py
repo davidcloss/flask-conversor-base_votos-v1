@@ -10,11 +10,24 @@ def validar_documento(documento):
     cpf = CPF()
     cnpj = CNPJ()
 
-    documento = documento.replace(".", "").replace("-", "").replace("/", "")
+    documento_str = str(documento).strip()  # Converte para string e remove espaços
 
-    if len(documento) == 11 and cpf.validate(documento):
+    # Tentativa de validação com base no número de dígitos
+    if len(documento_str) <= 11:
+        # Preenche com zeros à esquerda, se necessário
+        documento_str = documento_str.zfill(11)
+        if cpf.validate(documento_str):
+            return 'FISICA'
+    elif 12 <= len(documento_str) <= 14:
+        # Preenche com zeros à esquerda, se necessário
+        documento_str = documento_str.zfill(14)
+        if cnpj.validate(documento_str):
+            return 'JURIDICA'
+    
+    # Caso falhe como CPF e CNPJ, tenta validar ambos
+    if cpf.validate(documento_str.zfill(11)):
         return 'FISICA'
-    elif len(documento) == 14 and cnpj.validate(documento):
+    elif cnpj.validate(documento_str.zfill(14)):
         return 'JURIDICA'
     else:
         return "Documento inválido"
@@ -33,11 +46,13 @@ def index():
 
         if file and file.filename.endswith('.xlsx'):
             # Lê o arquivo da memória
-            df1 = pd.read_excel(file)
+            df1 = pd.read_excel(file, dtype={'Documento do Participante': str})
 
             # Processa o DataFrame
             df2 = pd.DataFrame()
             df2['NOME'] = df1['Razão Social do Participante']
+
+            # Aplica a validação e preenche a coluna TIPO_PESSOA
             df2['TIPO_PESSOA'] = df1['Documento do Participante'].apply(validar_documento)
             df2['CPF_CNPJ'] = df1['Documento do Participante']
             df2['ON'] = df1['Quantidade']
