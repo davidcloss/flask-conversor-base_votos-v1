@@ -10,16 +10,14 @@ def validar_documento(documento):
     cpf = CPF()
     cnpj = CNPJ()
 
-    documento_str = str(documento).strip()  # Converte para string e remove espaços
+    documento_str = str(documento).strip()
 
     # Tentativa de validação com base no número de dígitos
     if len(documento_str) <= 11:
-        # Preenche com zeros à esquerda, se necessário
         documento_str = documento_str.zfill(11)
         if cpf.validate(documento_str):
             return 'FISICA'
     elif 12 <= len(documento_str) <= 14:
-        # Preenche com zeros à esquerda, se necessário
         documento_str = documento_str.zfill(14)
         if cnpj.validate(documento_str):
             return 'JURIDICA'
@@ -40,22 +38,26 @@ def index():
             return 'Nenhum arquivo selecionado.'
         
         file = request.files['file']
-
+        
+        # Verifica se o arquivo foi selecionado
         if file.filename == '':
             return 'Nenhum arquivo selecionado.'
 
         if file and file.filename.endswith('.xlsx'):
             # Lê o arquivo da memória
-            df1 = pd.read_excel(file, dtype={'Documento do Participante': str})
+            df1 = pd.read_excel(file)
+
+            # Obtém os nomes das colunas do formulário
+            coluna_nome = request.form['coluna_nome']
+            coluna_documento = request.form['coluna_documento']
+            coluna_quantidade = request.form['coluna_quantidade']
 
             # Processa o DataFrame
             df2 = pd.DataFrame()
-            df2['NOME'] = df1['Razão Social do Participante']
-
-            # Aplica a validação e preenche a coluna TIPO_PESSOA
-            df2['TIPO_PESSOA'] = df1['Documento do Participante'].apply(validar_documento)
-            df2['CPF_CNPJ'] = df1['Documento do Participante']
-            df2['ON'] = df1['Quantidade']
+            df2['NOME'] = df1[coluna_nome]
+            df2['TIPO_PESSOA'] = df1[coluna_documento].apply(validar_documento)
+            df2['CPF_CNPJ'] = df1[coluna_documento]
+            df2['ON'] = df1[coluna_quantidade]
             df2['PN'] = 0  # Adiciona uma coluna 'PN' vazia
 
             # Salva o CSV na memória (BytesIO)
