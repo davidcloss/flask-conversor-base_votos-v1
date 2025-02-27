@@ -76,15 +76,21 @@
     <div class="container">
         <h1>Upload de Planilha</h1>
         <form action="/" method="POST" enctype="multipart/form-data">
-            <input type="file" name="file" accept=".xlsx" required>
-            <br>
-            <input type="text" name="coluna_nome" placeholder="Nome da coluna com o nome do participante" required>
-            <br>
-            <input type="text" name="coluna_documento" placeholder="Nome da coluna com o documento do participante" required>
-            <br>
-            <input type="text" name="coluna_quantidade" placeholder="Nome da coluna com a quantidade" required>
-            <br>
-            <input type="submit" value="Upload">
+            <input type="file" name="file" accept=".xlsx" required><br><br>
+
+            <label>Coluna do Nome:</label><br>
+            <input type="text" name="coluna_nome" required><br><br>
+
+            <label>Coluna do Documento (CPF/CNPJ):</label>
+            <input type="text" name="coluna_documento" required><br><br>
+
+            <label>Coluna da Quantidade (ON):</label>
+            <input type="text" name="coluna_quantidade_on" required><br><br>
+
+            <label>Coluna da Quantidade (PN):</label>
+            <input type="text" name="coluna_quantidade_pn"><br><br>
+
+            <button type="submit">Converter</button>
         </form>
     </div>
 </body>

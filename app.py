@@ -5,14 +5,12 @@ from io import BytesIO
 
 app = Flask(__name__)
 
-# Função para validar documento
+
 def validar_documento(documento):
     cpf = CPF()
     cnpj = CNPJ()
-
     documento_str = str(documento).strip()
 
-    # Tentativa de validação com base no número de dígitos
     if len(documento_str) <= 11:
         documento_str = documento_str.zfill(11)
         if cpf.validate(documento_str):
@@ -21,8 +19,7 @@ def validar_documento(documento):
         documento_str = documento_str.zfill(14)
         if cnpj.validate(documento_str):
             return 'JURIDICA'
-    
-    # Caso falhe como CPF e CNPJ, tenta validar ambos
+
     if cpf.validate(documento_str.zfill(11)):
         return 'FISICA'
     elif cnpj.validate(documento_str.zfill(14)):
@@ -30,45 +27,47 @@ def validar_documento(documento):
     else:
         return "Documento inválido"
 
+
 @app.route('/', methods=['GET', 'POST'])
 def index():
     if request.method == 'POST':
-        # Verifica se um arquivo foi enviado
         if 'file' not in request.files:
             return 'Nenhum arquivo selecionado.'
-        
+
         file = request.files['file']
-        
-        # Verifica se o arquivo foi selecionado
         if file.filename == '':
             return 'Nenhum arquivo selecionado.'
 
         if file and file.filename.endswith('.xlsx'):
-            # Lê o arquivo da memória
             df1 = pd.read_excel(file)
 
             # Obtém os nomes das colunas do formulário
             coluna_nome = request.form['coluna_nome']
             coluna_documento = request.form['coluna_documento']
-            coluna_quantidade = request.form['coluna_quantidade']
+            coluna_quantidade_on = request.form['coluna_quantidade_on']
+            coluna_quantidade_pn = request.form.get('coluna_quantidade_pn', '')  # Campo opcional
 
             # Processa o DataFrame
             df2 = pd.DataFrame()
             df2['NOME'] = df1[coluna_nome]
             df2['TIPO_PESSOA'] = df1[coluna_documento].apply(validar_documento)
             df2['CPF_CNPJ'] = df1[coluna_documento]
-            df2['ON'] = df1[coluna_quantidade]
-            df2['PN'] = 0  # Adiciona uma coluna 'PN' vazia
+            df2['ON'] = df1[coluna_quantidade_on]
 
-            # Salva o CSV na memória (BytesIO)
+            # Adiciona PN (usa 0 se não for fornecido)
+            if coluna_quantidade_pn and coluna_quantidade_pn in df1.columns:
+                df2['PN'] = df1[coluna_quantidade_pn]
+            else:
+                df2['PN'] = 0
+
             output = BytesIO()
             df2.to_csv(output, index=False, sep=',')
             output.seek(0)
 
-            # Envia o arquivo para download
             return send_file(output, as_attachment=True, download_name='base_votos.csv', mimetype='text/csv')
 
     return render_template('index.html')
+
 
 if __name__ == '__main__':
     app.run(debug=True)
