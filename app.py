@@ -44,21 +44,26 @@ def index():
             # Obtém os nomes das colunas do formulário
             coluna_nome = request.form['coluna_nome']
             coluna_documento = request.form['coluna_documento']
-            coluna_quantidade_on = request.form['coluna_quantidade_on']
-            coluna_quantidade_pn = request.form.get('coluna_quantidade_pn', '')  # Campo opcional
+            coluna_serie_1 = request.form['coluna_serie_1']
+            coluna_serie_2 = request.form.get('coluna_serie_2', '')  # Campo opcional
 
             # Processa o DataFrame
             df2 = pd.DataFrame()
             df2['NOME'] = df1[coluna_nome]
             df2['TIPO_PESSOA'] = df1[coluna_documento].apply(validar_documento)
             df2['CPF_CNPJ'] = df1[coluna_documento]
-            df2['ON'] = df1[coluna_quantidade_on]
 
-            # Adiciona PN (usa 0 se não for fornecido)
-            if coluna_quantidade_pn and coluna_quantidade_pn in df1.columns:
-                df2['PN'] = df1[coluna_quantidade_pn]
+            # Adiciona SERIE_1 corretamente, preenchendo NaN com 0 e convertendo para inteiro
+            if coluna_serie_1 and coluna_serie_1 in df1.columns:
+                df2['SERIE_1'] = df1[coluna_serie_1].fillna(0).astype(int)
             else:
-                df2['PN'] = 0
+                df2['SERIE_1'] = 0
+
+            # Adiciona SERIE_2 corretamente, preenchendo NaN com 0 e convertendo para inteiro
+            if coluna_serie_2 and coluna_serie_2 in df1.columns:
+                df2['SERIE_2'] = df1[coluna_serie_2].fillna(0).astype(int)
+            else:
+                df2['SERIE_2'] = 0
 
             output = BytesIO()
             df2.to_csv(output, index=False, sep=',')
